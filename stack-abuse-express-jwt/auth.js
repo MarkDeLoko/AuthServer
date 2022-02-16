@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const cors = require('cors')
 
-const app = express();
+const app = express().use(cors());
+
 
 const accessTokenSecret = 'somerandomaccesstoken';
 const refreshTokenSecret = 'somerandomstringforrefreshtoken';
@@ -22,10 +24,11 @@ const users = [
 let refreshTokens = [];
 
 app.use(bodyParser.json());
+app.use(cors())
 
 app.post('/login', (req, res) => {
     // read username and password from request body
-    const { username, password } = req.query;
+    const { username, password } = req.body;
 
     // filter user from the users array by username and password
     const user = users.find(u => { return u.username === username && u.password === password });
@@ -34,7 +37,7 @@ app.post('/login', (req, res) => {
         // generate an access token
         const accessToken = jwt.sign({ username: user.username, role: user.role }, accessTokenSecret, { expiresIn: '20m' });
         const refreshToken = jwt.sign({ username: user.username, role: user.role }, refreshTokenSecret);
-
+        console.log(username)
         refreshTokens.push(refreshToken);
 
         res.json({
@@ -42,6 +45,7 @@ app.post('/login', (req, res) => {
             refreshToken
         });
     } else {
+        console.log('incorrect', username, password)
         res.send('Username or password incorrect');
     }
 });
@@ -77,7 +81,7 @@ app.post('/logout', (req, res) => {
     res.send("Logout successful");
 });
 
-app.listen(port = 3001, () => {
+app.listen(port = 3003, () => {
     console.log('Authentication service started on port', port);
 });
 
